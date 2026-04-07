@@ -1,4 +1,5 @@
 require('dotenv').config();
+const axios = require("axios");
 const express = require('express');
 const cors = require('cors');
 
@@ -50,6 +51,40 @@ app.post("/speech-to-text", upload.single("audio"), async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error en Speech to Text" });
+    }
+});
+
+app.post("/translate", async (req, res) => {
+    try {
+        const { text, to } = req.body;
+
+        const endpoint = "https://api.cognitive.microsofttranslator.com/translate";
+
+        const response = await axios.post(
+            endpoint,
+            [{
+                text: text
+            }],
+            {
+                params: {
+                    "api-version": "3.0",
+                    "to": to
+                },
+                headers: {
+                    "Ocp-Apim-Subscription-Key": process.env.AZURE_TRANSLATOR_KEY,
+                    "Ocp-Apim-Subscription-Region": process.env.AZURE_TRANSLATOR_REGION,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+        const translatedText = response.data[0].translations[0].text;
+
+        res.json({
+            translated: translatedText
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error en traducción" });
     }
 });
 
